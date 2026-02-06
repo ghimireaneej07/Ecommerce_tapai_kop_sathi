@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - Tapai Ko Sathi{% endblock %}
+
+{% block content %}
+<div
+    style="min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+    <h1 style="font-size: 4rem; font-weight: 800; color: #ef4444; margin-bottom: 1rem;">500</h1>
+    <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Something went wrong.</h2>
+    <p style="color: var(--text-muted); max-width: 400px; margin-bottom: 2rem;">
+        We're facing some internal server issues. Please try again later.
+    </p>
+    <a href="{% url 'home' %}" class="tks-btn-add-cart" style="text-decoration: none; padding: 0.8rem 2rem;">Back to
+        Home</a>
+</div>
+{% endblock %}

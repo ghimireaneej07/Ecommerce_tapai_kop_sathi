@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}My Orders | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-section">
+    <h1>My orders</h1>
+    {% if orders %}
+        <table class="tks-cart-table">
+            <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.order_number }}</td>
+                    <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>{{ order.get_status_display }}</td>
+                    <td>NPR {{ order.total_amount }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have not placed any orders yet.</p>
+    {% endif %}
+</section>
+{% endblock %}
+

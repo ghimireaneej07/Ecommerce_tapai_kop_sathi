@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Your Cart | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-section">
+    <h1>Your cart</h1>
+    <div id="tks-cart-root">
+        {% if cart.items.all %}
+            <table class="tks-cart-table">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in cart.items.all %}
+                    <tr data-item-id="{{ item.id }}">
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>NPR {{ item.product.price }}</td>
+                        <td>NPR {{ item.subtotal }}</td>
+                        <td>
+                            <button class="tks-link-btn tks-btn-remove-item"
+                                    data-item-id="{{ item.id }}">
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <div class="tks-cart-summary">
+                <p>Total: <strong>NPR {{ cart.total_price }}</strong></p>
+                <a href="{% url 'checkout_start' %}" class="tks-btn-primary">Proceed to checkout</a>
+            </div>
+        {% else %}
+            <p>Your cart is empty. <a href="{% url 'product_list' %}">Start shopping</a>.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+  window.TKS_CART_ENDPOINTS = Object.assign(window.TKS_CART_ENDPOINTS || {}, {
+    remove: "{% url 'api_cart_remove' 0 %}".replace("/0/", "/"),
+    detail: "{% url 'api_cart_detail' %}"
+  });
+</script>
+{% endblock %}
+

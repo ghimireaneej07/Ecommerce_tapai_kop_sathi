@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-dashboard">
+    <h1>Namaste, {{ request.user.first_name|default:request.user.email }}</h1>
+    <p>Your wellness journey with <strong>Tapai Ko Sathi</strong> starts here.</p>
+    <div class="tks-dashboard-grid">
+        <a href="{% url 'profile' %}" class="tks-card">
+            <h2>Profile</h2>
+            <p>Update your basic details.</p>
+        </a>
+        <a href="{% url 'product_list' %}" class="tks-card">
+            <h2>Shop</h2>
+            <p>Explore herbal wellness products.</p>
+        </a>
+        <a href="{% url 'cart_page' %}" class="tks-card">
+            <h2>Cart</h2>
+            <p>View and manage your cart.</p>
+        </a>
+    </div>
+</section>
+{% endblock %}
+

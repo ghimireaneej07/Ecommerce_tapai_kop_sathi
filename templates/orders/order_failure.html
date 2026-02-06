@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Payment failed | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-section">
+    <h1>We could not confirm your payment</h1>
+    <p>Order <strong>{{ order.order_number }}</strong> currently has status <strong>{{ order.get_status_display }}</strong>.</p>
+    <p>You can try paying again or place a new order.</p>
+    <p>
+        <a href="{% url 'checkout_start' %}" class="tks-btn-primary">Try again</a>
+        <a href="{% url 'product_list' %}" class="tks-btn-primary" style="margin-left:0.5rem;">Back to shop</a>
+    </p>
+</section>
+{% endblock %}
+

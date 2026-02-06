@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} | Tapai Ko Sathi{% endblock %}
+{% block meta_description %}{{ product.short_description|default:product.name }}{% endblock %}
+{% block content %}
+<article class="tks-product-detail">
+    <div class="tks-product-detail-media">
+        {% if product.main_image %}
+            <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+        {% endif %}
+    </div>
+    <div class="tks-product-detail-info">
+        <h1>{{ product.name }}</h1>
+        <p class="tks-price">NPR {{ product.price }}</p>
+        <p>{{ product.description|linebreaks }}</p>
+        <button class="tks-btn-primary tks-btn-add-cart"
+                data-product-id="{{ product.id }}">
+            Add to cart
+        </button>
+        <p class="tks-note">Cash on Delivery available in major cities across Nepal.</p>
+    </div>
+</article>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "{{ product.name|escapejs }}",
+  "image": ["{{ request.build_absolute_uri(product.main_image.url) if product.main_image else '' }}"],
+  "description": "{{ product.short_description|default:product.name|escapejs }}",
+  "brand": {
+    "@type": "Brand",
+    "name": "Tapai Ko Sathi"
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "NPR",
+    "price": "{{ product.price }}",
+    "availability": "{% if product.stock > 0 %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "url": "{{ request.build_absolute_uri }}"
+  }
+}
+</script>
+{% endblock %}
+{% block extra_js %}
+<script>
+  window.TKS_CART_ENDPOINTS = {
+    add: "{% url 'api_cart_add' 0 %}".replace("/0/", "/"),
+    detail: "{% url 'api_cart_detail' %}"
+  };
+</script>
+{% endblock %}
+

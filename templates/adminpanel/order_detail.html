@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Order {{ order.order_number }} | Admin | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-section">
+    <h1>Order {{ order.order_number }}</h1>
+    <p>Customer: {{ order.full_name }} ({{ order.user.email }})</p>
+    <p>Total: NPR {{ order.total_amount }}</p>
+    <p>Address: {{ order.address_line1 }}, {{ order.city }}</p>
+
+    <h2>Items</h2>
+    <table class="tks-cart-table">
+        <thead>
+        <tr>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Subtotal</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in order.items.all %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>NPR {{ item.price }}</td>
+                <td>NPR {{ item.subtotal }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Update status</h2>
+    <form method="post" class="tks-auth-card">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="tks-form-field">
+            {{ form.status.label_tag }}
+            {{ form.status }}
+            {% if form.status.errors %}
+                <div class="tks-field-error">{{ form.status.errors|striptags }}</div>
+            {% endif %}
+        </div>
+        <button type="submit" class="tks-btn-primary">Save</button>
+    </form>
+</section>
+{% endblock %}
+

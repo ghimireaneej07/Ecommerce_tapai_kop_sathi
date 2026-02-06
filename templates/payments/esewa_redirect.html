@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Redirecting to eSewa | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-section">
+    <h1>Redirecting to eSewa</h1>
+    <p>Please wait while we securely redirect you to eSewa to complete your payment.</p>
+    <form id="esewa-form" action="https://uat.esewa.com.np/epay/main" method="POST">
+        {# Required eSewa fields. We use total_amount both as amt and tAmt for a single-product flow. #}
+        <input type="hidden" name="amt" value="{{ order.total_amount }}">
+        <input type="hidden" name="pdc" value="0">
+        <input type="hidden" name="psc" value="0">
+        <input type="hidden" name="txAmt" value="0">
+        <input type="hidden" name="tAmt" value="{{ order.total_amount }}">
+        <input type="hidden" name="pid" value="{{ order.order_number }}">
+        <input type="hidden" name="scd" value="{{ esewa_merchant_code }}">
+        <input type="hidden" name="su" value="{{ success_url }}">
+        <input type="hidden" name="fu" value="{{ failure_url }}">
+        <button type="submit" class="tks-btn-primary">Pay with eSewa</button>
+    </form>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+  // Auto-submit after short delay for smooth UX
+  setTimeout(function () {
+    document.getElementById("esewa-form").submit();
+  }, 1000);
+</script>
+{% endblock %}
+

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-section">
+    <h1>Store overview</h1>
+    <div class="tks-dashboard-grid">
+        <article class="tks-card">
+            <h2>Total orders</h2>
+            <p>{{ total_orders }}</p>
+        </article>
+        <article class="tks-card">
+            <h2>Total revenue</h2>
+            <p>NPR {{ total_revenue }}</p>
+        </article>
+        <article class="tks-card">
+            <h2>Pending orders</h2>
+            <p>{{ pending_orders }}</p>
+        </article>
+    </div>
+
+    <h2 style="margin-top:2rem;">Recent orders</h2>
+    <table class="tks-cart-table">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Status</th>
+            <th>Total</th>
+            <th>Placed</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for order in recent_orders %}
+            <tr>
+                <td><a href="{% url 'admin_order_detail' order.pk %}">{{ order.order_number }}</a></td>
+                <td>{{ order.full_name }}</td>
+                <td>{{ order.get_status_display }}</td>
+                <td>NPR {{ order.total_amount }}</td>
+                <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">No orders yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
+

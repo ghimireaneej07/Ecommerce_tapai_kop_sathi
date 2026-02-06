@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Tapai Ko Sathi{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{% block meta_description %}Premium herbal wellness for Nepal{% endblock %}">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="tks-body">
+    <header class="tks-header">
+        <div class="tks-container tks-header-inner">
+            <!-- Brand -->
+            <a href="{% url 'home' %}" class="tks-logo">
+                Tapai Ko Sathi
+            </a>
+
+            <!-- Desktop Nav -->
+            <nav class="tks-nav">
+                <a href="{% url 'home' %}"
+                    class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+                <!-- Shop and Categories disabled for now -->
+            </nav>
+
+            <!-- Actions -->
+            <div class="tks-actions" style="display:flex; gap:1rem; align-items:center;">
+                <!-- Search and Cart disabled for now -->
+            </div>
+        </div>
+    </header>
+
+    <main class="tks-main">
+        <div class="tks-container">
+            {% if messages %}
+            <div class="tks-toast-container-static">
+                {% for message in messages %}
+                <div class="tks-toast {{ message.tags }}">
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="tks-footer">
+        <div class="tks-container">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:2rem;">
+                <div>
+                    <span class="tks-logo" style="font-size:1.2rem;">Tapai Ko Sathi</span>
+                    <p style="color:var(--text-muted); max-width:300px; margin-top:0.5rem;">
+                        Premium herbal products for your daily wellness journey.
+                    </p>
+                </div>
+                <div class="tks-footer-links">
+                    <h4>Wellness</h4>
+                    <p style="color:var(--text-muted); font-size: 0.875rem;">Natural balance for everyday life.</p>
+                </div>
+                <div class="tks-footer-links">
+                    <h4>Support</h4>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Shipping Policy</a>
+                </div>
+            </div>
+            <div
+                style="border-top:1px solid var(--border); margin-top:2rem; padding-top:1rem; text-align:center; font-size:0.875rem; color:var(--text-muted);">
+                &copy; {{ now|date:"Y" }} Tapai Ko Sathi. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Categories | Admin | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-section">
+    <h1>Categories</h1>
+    <p><a href="{% url 'admin_category_create' %}" class="tks-btn-primary">Add category</a></p>
+    <table class="tks-cart-table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for category in categories %}
+            <tr>
+                <td>{{ category.name }}</td>
+                <td>{{ category.slug }}</td>
+                <td>{{ category.is_active|yesno:"Active,Inactive" }}</td>
+                <td>
+                    <a href="{% url 'admin_category_edit' category.pk %}">Edit</a> |
+                    <a href="{% url 'admin_category_delete' category.pk %}">Delete</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4">No categories defined.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
+

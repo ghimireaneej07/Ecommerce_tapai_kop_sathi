@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Checkout | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-section">
+    <h1>Checkout</h1>
+    <div class="tks-checkout-grid">
+        <div class="tks-checkout-main">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <div class="tks-form-grid">
+                    {% for field in form %}
+                        <div class="tks-form-field">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small>{{ field.help_text }}</small>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="tks-field-error">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="tks-btn-primary">Place order</button>
+            </form>
+        </div>
+        <aside class="tks-checkout-summary">
+            <h2>Order summary</h2>
+            {% if cart.items.all %}
+                <ul class="tks-summary-list">
+                    {% for item in cart.items.all %}
+                        <li>
+                            <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                            <span>NPR {{ item.subtotal }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <p class="tks-summary-total">
+                    <span>Total</span>
+                    <span><strong>NPR {{ cart.total_price }}</strong></span>
+                </p>
+            {% else %}
+                <p>Your cart is empty.</p>
+            {% endif %}
+        </aside>
+    </div>
+</section>
+{% endblock %}
+

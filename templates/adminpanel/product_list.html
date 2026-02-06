@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Products | Admin | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-section">
+    <h1>Products</h1>
+    <p><a href="{% url 'admin_product_create' %}" class="tks-btn-primary">Add product</a></p>
+    <table class="tks-cart-table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.category.name }}</td>
+                <td>NPR {{ product.price }}</td>
+                <td>{{ product.stock }}</td>
+                <td>{{ product.is_active|yesno:"Active,Inactive" }}</td>
+                <td>
+                    <a href="{% url 'admin_product_edit' product.pk %}">Edit</a> |
+                    <a href="{% url 'admin_product_delete' product.pk %}">Delete</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6">No products defined yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
+

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Users | Admin | Tapai Ko Sathi{% endblock %}
+{% block content %}
+<section class="tks-section">
+    <h1>Users</h1>
+    <table class="tks-cart-table">
+        <thead>
+        <tr>
+            <th>Email</th>
+            <th>Name</th>
+            <th>Verified</th>
+            <th>Staff</th>
+            <th>Active</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.email }}</td>
+                <td>{{ user.get_full_name }}</td>
+                <td>{{ user.is_email_verified|yesno:"Yes,No" }}</td>
+                <td>{{ user.is_staff|yesno:"Yes,No" }}</td>
+                <td>{{ user.is_active|yesno:"Yes,No" }}</td>
+                <td><a href="{% url 'admin_user_edit' user.pk %}">Edit</a></td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6">No users.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
+
