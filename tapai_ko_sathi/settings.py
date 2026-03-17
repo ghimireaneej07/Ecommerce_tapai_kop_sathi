@@ -1,9 +1,11 @@
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 # SECURITY
 # SECURITY: production vs development
@@ -47,6 +49,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "tapai_ko_sathi.core.middleware.ErrorHandlingMiddleware",
 ]
 
 ROOT_URLCONF = "tapai_ko_sathi.urls"
@@ -72,27 +75,39 @@ TEMPLATES = [
 WSGI_APPLICATION = "tapai_ko_sathi.wsgi.application"
 ASGI_APPLICATION = "tapai_ko_sathi.asgi.application"
 
-# Monkey-patch for MariaDB 10.4 compatibility (XAMPP default) with Django 5.x
-try:
-    from django.db.backends.mysql.base import DatabaseWrapper
-    DatabaseWrapper.check_database_version_supported = lambda self: None
-except ImportError:
-    pass
 
 # DATABASES
-# For local development we use SQLite for reliability with Django 6.x.
-# To switch to MongoDB in production with djongo, change ENGINE to "djongo"
-# and configure the CLIENT settings accordingly.
+# DATABASES
+# Configure MySQL from environment for XAMPP/local use. Keep sensible defaults for local XAMPP.
+# To use MySQL, set DB_ENGINE=django.db.backends.mysql (and other DB_* env vars).
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "tapaikosathi_db",
-        "USER": "root",
-        "PASSWORD": "",
-        "HOST": "127.0.0.1",
-        "PORT": "3306",
+        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.getenv("DB_NAME", BASE_DIR / "db.sqlite3"),
     }
 }
+
+# MySQL configuration (activate by setting DB_ENGINE env var to django.db.backends.mysql)
+if "mysql" in DATABASES["default"]["ENGINE"]:
+    DATABASES["default"].update({
+        "USER": os.getenv("DB_USER", "root"),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+        "PORT": os.getenv("DB_PORT", "3306"),
+    })
+
+# Provide a PyMySQL fallback on platforms where mysqlclient isn't available.
+if "mysql" in DATABASES["default"]["ENGINE"]:
+    try:
+        import pymysql
+        pymysql.install_as_MySQLdb()
+        
+        # Monkey-patch for MySQL/MariaDB version compatibility
+        from django.db.backends.mysql.base import DatabaseWrapper
+        DatabaseWrapper.check_database_version_supported = lambda self: None
+    except Exception:
+        # If PyMySQL isn't installed, we expect `mysqlclient` to be available.
+        pass
 
 # AUTH
 AUTH_USER_MODEL = "accounts.User"
@@ -147,10 +162,58 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
+}
+
+# REST Framework pagination and JWT defaults
+REST_FRAMEWORK.update({
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": int(os.getenv("API_PAGE_SIZE", "12")),
+})
+
+# Simple JWT defaults (can be tuned via env)
+from datetime import timedelta
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_MINUTES", "60"))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", "7"))),
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+# Basic logging for production readiness
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "error.log",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": os.getenv("LOG_LEVEL", "INFO"),
+    },
 }
 
 # SECURITY HARDENING
@@ -162,6 +225,7 @@ SECURE_HSTS_SECONDS = 0 if DEBUG else 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
 SECURE_SSL_REDIRECT = False  # Enable behind HTTPS proxy
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 
 # PAYMENT SETTINGS (environment driven)
 ESEWA_MERCHANT_CODE = os.getenv("ESEWA_MERCHANT_CODE", "")

@@ -1,24 +1,21 @@
 {% extends "base.html" %}
+{% load form_tags %}
 {% block title %}Profile | Tapai Ko Sathi{% endblock %}
 {% block content %}
-<section class="tks-auth-card">
-    <h1>Your profile</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        <div class="tks-form-grid">
-            {% for field in form %}
-                <div class="tks-form-field">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        <div class="tks-field-error">{{ field.errors|striptags }}</div>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
-        <button type="submit" class="tks-btn-primary">Save changes</button>
-    </form>
+<section class="tks-container" style="padding: 4rem 1.5rem;">
+    <div class="tks-card" style="max-width: 640px; margin: 0 auto; padding: 2.5rem;">
+        <h1 style="margin-bottom: 1.5rem; color: var(--primary-dark);">Your profile</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            {% include 'accounts/_form_fields.html' %}
+
+            <div style="text-align: right;">
+                <button type="submit" class="tks-btn-primary" style="padding: 0.75rem 1.5rem;">Save changes</button>
+            </div>
+        </form>
+    </div>
 </section>
 {% endblock %}
 

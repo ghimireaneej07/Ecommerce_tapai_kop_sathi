@@ -1,14 +1,60 @@
 import uuid
-
+from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
+from django.db import transaction
+from django.db.models import F
 
-from tapai_ko_sathi.apps.cart.models import Cart
-from tapai_ko_sathi.apps.orders.forms import CheckoutForm
-from tapai_ko_sathi.apps.orders.models import Order, OrderItem
+from rest_framework import generics, permissions, status
+from tapai_ko_sathi.core.utils import api_response, api_error
+from .models import Order, OrderItem
+from .serializers import OrderSerializer
 from tapai_ko_sathi.apps.payments.models import Payment
+from tapai_ko_sathi.apps.orders.forms import CheckoutForm
+from tapai_ko_sathi.apps.products.models import Product
+
+
+class OrderListAPI(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return api_response(data=serializer.data)
+
+
+class OrderCreateAPI(generics.CreateAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        cart = _get_user_cart(request)
+        if not cart or cart.total_items == 0:
+            return api_error(message="Your cart is empty", status_code=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            order = _create_order_from_cart(
+                user=request.user,
+                cart=cart,
+                order_data=serializer.validated_data,
+            )
+        except ValueError as exc:
+            return api_error(message=str(exc), status_code=status.HTTP_400_BAD_REQUEST)
+
+        return api_response(
+            data=OrderSerializer(order).data,
+            message="Order created successfully",
+            status_code=status.HTTP_201_CREATED
+        )
 
 
 def _get_user_cart(request):
@@ -26,7 +72,73 @@ def _generate_order_number() -> str:
     """
     Generate a short, unique order identifier.
     """
-    return f"TKS-{uuid.uuid4().hex[:10].upper()}"
+    import uuid
+    uid = uuid.uuid4().hex
+    return f"TKS-{uid[:10].upper()}"
+
+
+def _create_order_from_cart(user, cart, order_data):
+    cart_items = list(cart.items.select_related("product"))
+    if not cart_items:
+        raise ValueError("Your cart is empty")
+
+    product_ids = [item.product_id for item in cart_items]
+    with transaction.atomic():
+        products = Product.objects.select_for_update().filter(id__in=product_ids)
+        product_map = {product.id: product for product in products}
+
+        total_amount = Decimal("0.00")
+        for item in cart_items:
+            product = product_map.get(item.product_id)
+            if not product or not product.is_active:
+                raise ValueError("One or more products are unavailable")
+            if product.stock < item.quantity:
+                raise ValueError(f"Not enough stock for {product.name}")
+
+            total_amount += product.price * item.quantity
+
+        order = Order.objects.create(
+            user=user,
+            order_number=_generate_order_number(),
+            status="pending",
+            subtotal=total_amount,
+            total_amount=total_amount,
+            payment_method=order_data["payment_method"],
+            shipping_full_name=order_data["full_name"],
+            shipping_phone=order_data["phone"],
+            shipping_street_address=order_data["address_line1"],
+            shipping_apartment_address=order_data.get("address_line2", ""),
+            shipping_city=order_data["city"],
+            shipping_postal_code=order_data.get("postal_code", ""),
+            shipping_country="Nepal",
+        )
+
+        order_items = []
+        for item in cart_items:
+            product = product_map[item.product_id]
+            order_items.append(
+                OrderItem(
+                    order=order,
+                    product=product,
+                    quantity=item.quantity,
+                    unit_price=product.price,
+                )
+            )
+            product.stock = F("stock") - item.quantity
+            product.save(update_fields=["stock"])
+
+        OrderItem.objects.bulk_create(order_items)
+
+        Payment.objects.create(
+            order=order,
+            gateway=order.payment_method,
+            amount=order.total_amount,
+            status="initiated",
+        )
+
+        cart.items.all().delete()
+
+    return order
 
 
 @login_required
@@ -39,39 +151,17 @@ def checkout_start(request):
     if request.method == "POST":
         form = CheckoutForm(request.POST)
         if form.is_valid():
-            order_number = _generate_order_number()
-            order = Order.objects.create(
-                user=request.user,
-                order_number=order_number,
-                status="pending",
-                payment_method=form.cleaned_data["payment_method"],
-                total_amount=cart.total_price,
-                full_name=form.cleaned_data["full_name"],
-                phone=form.cleaned_data["phone"],
-                address_line1=form.cleaned_data["address_line1"],
-                address_line2=form.cleaned_data["address_line2"],
-                city=form.cleaned_data["city"],
-                postal_code=form.cleaned_data["postal_code"],
-            )
-
-            # Copy cart items into order
-            for item in cart.items.all():
-                OrderItem.objects.create(
-                    order=order,
-                    product=item.product,
-                    quantity=item.quantity,
-                    price=item.product.price,
+            try:
+                order = _create_order_from_cart(
+                    user=request.user,
+                    cart=cart,
+                    order_data=form.cleaned_data,
                 )
+            except ValueError as exc:
+                messages.error(request, str(exc))
+                return redirect("cart_page")
 
-            payment = Payment.objects.create(
-                order=order,
-                gateway=form.cleaned_data["payment_method"],
-                amount=order.total_amount,
-                status="initiated",
-            )
-
-            # Clear cart after creating order; for online payments, status is updated after verification
-            cart.items.all().delete()
+            payment = order.payment
 
             if payment.gateway == "cod":
                 order.status = "pending"

@@ -1,4 +1,7 @@
+import logging
 from django.db import models
+
+logger = logging.getLogger(__name__)
 
 
 class Category(models.Model):
@@ -47,26 +50,34 @@ class Product(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=["slug"]),
+            models.Index(fields=["name"]),
+            models.Index(fields=["price"]),
             models.Index(fields=["is_active"]),
         ]
         ordering = ["-created_at"]
 
     def save(self, *args, **kwargs):
+        # Only download if image_url is provided and main_image is empty, 
+        # and we are creating or the image_url has changed.
         if self.image_url and not self.main_image:
             from django.core.files import File
             import requests
             from urllib.parse import urlparse
             import os
+            from io import BytesIO
+            
             try:
-                response = requests.get(self.image_url)
+                response = requests.get(self.image_url, timeout=5, stream=True)
                 if response.status_code == 200:
-                    from io import BytesIO
                     file_name = os.path.basename(urlparse(self.image_url).path)
                     if not file_name:
                         file_name = f"{self.slug}_image.jpg"
+                    
+                    # Ensure we don't block the whole save process if something goes wrong here
                     self.main_image.save(file_name, File(BytesIO(response.content)), save=False)
             except Exception as e:
-                print(f"Error downloading image: {e}")
+                # Log error but don't crash the save process
+                logger.error(f"Failed to download product image for {self.slug}: {str(e)}")
         
         super().save(*args, **kwargs)
 

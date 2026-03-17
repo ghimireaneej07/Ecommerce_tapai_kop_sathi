@@ -12,11 +12,19 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ["id", "product", "quantity", "price", "subtotal"]
+        fields = ["id", "product", "quantity", "unit_price", "subtotal"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+
+    # Expose shipping fields with simpler aliases for the API
+    full_name = serializers.CharField(source="shipping_full_name", required=True)
+    phone = serializers.CharField(source="shipping_phone", required=True)
+    address_line1 = serializers.CharField(source="shipping_street_address", required=True)
+    address_line2 = serializers.CharField(source="shipping_apartment_address", required=False, allow_blank=True)
+    city = serializers.CharField(source="shipping_city", required=True)
+    postal_code = serializers.CharField(source="shipping_postal_code", required=False, allow_blank=True)
 
     class Meta:
         model = Order

@@ -1,23 +1,37 @@
 {% extends "base.html" %}
 {% block title %}Dashboard | Tapai Ko Sathi{% endblock %}
 {% block content %}
-<section class="tks-dashboard">
-    <h1>Namaste, {{ request.user.first_name|default:request.user.email }}</h1>
-    <p>Your wellness journey with <strong>Tapai Ko Sathi</strong> starts here.</p>
-    <div class="tks-dashboard-grid">
-        <a href="{% url 'profile' %}" class="tks-card">
-            <h2>Profile</h2>
-            <p>Update your basic details.</p>
+<section class="tks-container" style="padding: 4rem 1.5rem;">
+    <div style="margin-bottom: 4rem;">
+        <h1 style="font-size: 2.5rem; color: var(--primary-dark); margin-bottom: 0.5rem;">Namaste, {{ display_name }}</h1>
+        <p style="color: var(--text-muted);">Welcome to your personal wellness sanctuary. Manage your orders and profile
+            here.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+        <a href="{% url 'profile' %}" class="tks-card"
+            style="padding: 2.5rem; text-decoration: none; color: inherit; transition: var(--transition);">
+            <div style="font-size: 2rem; margin-bottom: 1.5rem;">👤</div>
+            <h2 style="margin-bottom: 0.5rem; font-size: 1.25rem;">My Profile</h2>
+            <p style="color: var(--text-muted); font-size: 0.9375rem;">Keep your personal details and contact
+                information up to date.</p>
         </a>
-        <a href="{% url 'product_list' %}" class="tks-card">
-            <h2>Shop</h2>
-            <p>Explore herbal wellness products.</p>
+
+        <a href="{% url 'order_history' %}" class="tks-card"
+            style="padding: 2.5rem; text-decoration: none; color: inherit; transition: var(--transition);">
+            <div style="font-size: 2rem; margin-bottom: 1.5rem;">📦</div>
+            <h2 style="margin-bottom: 0.5rem; font-size: 1.25rem;">Order History</h2>
+            <p style="color: var(--text-muted); font-size: 0.9375rem;">Track your previous remedies and wellness kit
+                deliveries.</p>
         </a>
-        <a href="{% url 'cart_page' %}" class="tks-card">
-            <h2>Cart</h2>
-            <p>View and manage your cart.</p>
+
+        <a href="{% url 'product_list' %}" class="tks-card"
+            style="padding: 2.5rem; text-decoration: none; color: inherit; transition: var(--transition);">
+            <div style="font-size: 2rem; margin-bottom: 1.5rem;">🌿</div>
+            <h2 style="margin-bottom: 0.5rem; font-size: 1.25rem;">Shop Remedies</h2>
+            <p style="color: var(--text-muted); font-size: 0.9375rem;">Explore our curated collections of Himalayan
+                herbs and wellness products.</p>
         </a>
     </div>
 </section>
 {% endblock %}
-

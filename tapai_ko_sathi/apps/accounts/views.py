@@ -21,6 +21,7 @@ from django.core.mail import send_mail
 from .forms import LoginForm, ProfileForm, SignupForm
 from .models import User
 from .tokens import email_verification_token
+from .utils import send_verification_email
 from tapai_ko_sathi.apps.cart.utils import attach_cart_to_user
 
 
@@ -31,7 +32,7 @@ class SignupView(CreateView):
 
     def form_valid(self, form):
         user = form.save()
-        self._send_verification_email(self.request, user)
+        send_verification_email(self.request, user)
         messages.success(
             self.request,
             "Account created successfully. Please check your email to verify your address.",
@@ -39,16 +40,6 @@ class SignupView(CreateView):
         login(self.request, user)
         attach_cart_to_user(self.request, user)
         return redirect(self.success_url)
-
-    def _send_verification_email(self, request, user):
-        uid = urlsafe_base64_encode(str(user.pk).encode())
-        token = email_verification_token.make_token(user)
-        verify_url = request.build_absolute_uri(
-            reverse("verify_email", kwargs={"uidb64": uid, "token": token})
-        )
-        subject = "Verify your Tapai Ko Sathi account"
-        message = f"Namaste {user.first_name or user.email},\n\nPlease verify your email by clicking the link below:\n{verify_url}\n\nIf you did not create this account, please ignore this email."
-        send_mail(subject, message, None, [user.email], fail_silently=True)
 
 
 class CustomLoginView(BaseLoginView):
@@ -94,6 +85,13 @@ class VerifyEmailView(View):
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        display_name = user.first_name or user.username or user.email
+        context["display_name"] = display_name
+        return context
 
 
 class ProfileView(LoginRequiredMixin, UpdateView):

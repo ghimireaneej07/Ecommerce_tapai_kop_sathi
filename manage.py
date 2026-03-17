@@ -2,6 +2,15 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+# Ensure PyMySQL provides MySQLdb interface when mysqlclient is not installed.
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+    # Bypass MySQL 8.0+ version requirement for MariaDB/older MySQL
+    from django.db.backends.mysql.base import DatabaseWrapper
+    DatabaseWrapper.check_database_version_supported = lambda self: None
+except Exception:
+    pass
 
 
 def main():

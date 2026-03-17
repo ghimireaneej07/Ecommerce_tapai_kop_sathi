@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="Gents cosmetics placeholder">
+  <rect width="640" height="640" fill="#F4F1EA"/>
+  <rect x="200" y="240" width="240" height="220" rx="32" fill="#2D5A27" opacity="0.2"/>
+  <path d="M240 360h160" stroke="#D4AF37" stroke-width="10"/>
+  <text x="320" y="520" text-anchor="middle" font-family="Arial" font-size="28" fill="#2D5A27">Gents Care</text>
+</svg>

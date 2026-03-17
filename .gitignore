@@ -1,3 +1,19 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+.venv/
+.env
+*.sqlite3
+/media/
+/staticfiles/
+/.pytest_cache/
+*.log
+node_modules/
+dist/
+.DS_Store
 # Python
 *.pyc
 *.pyo
@@ -13,9 +29,11 @@ db.sqlite3-journal
 
 # Environment
 .env
+.env.production
 venv/
 env/
 .venv/
+myvenv0/
 
 # Static/Media
 staticfiles/
@@ -29,3 +47,8 @@ media/
 # Other
 .DS_Store
 *.swp
+
+# Debug / deployment scripts
+debug_db.py
+force_migrate.py
+deploy_check.txt

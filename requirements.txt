@@ -4,7 +4,11 @@ whitenoise>=6.5.0
 Pillow>=10.0.0
 dnspython>=2.4.0
 python-dotenv>=1.0.0
-mysqlclient>=2.1.0
+# Use PyMySQL on Windows (mysqlclient can be tricky to build). If you prefer
+# mysqlclient, remove PyMySQL and install mysqlclient instead.
+# mysqlclient>=2.1.0
 requests>=2.31.0
 razorpay>=1.3.0
+djangorestframework-simplejwt>=5.2.0
+PyMySQL>=1.0.3
 

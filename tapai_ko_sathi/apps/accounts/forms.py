@@ -40,12 +40,15 @@ class SignupForm(forms.ModelForm):
 class LoginForm(forms.Form):
     """
     Email/password login with standard authenticate.
+    Django's LoginView passes ``request`` as the first positional argument,
+    so we must accept it explicitly to avoid it being treated as form data.
     """
 
     email = forms.EmailField()
     password = forms.CharField(widget=forms.PasswordInput)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, request=None, *args, **kwargs):
+        self.request = request
         self.user = None
         super().__init__(*args, **kwargs)
 
@@ -55,7 +58,7 @@ class LoginForm(forms.Form):
         password = cleaned_data.get("password")
 
         if email and password:
-            user = authenticate(email=email, password=password)
+            user = authenticate(username=email, password=password)
             if user is None:
                 raise forms.ValidationError("Invalid email or password.")
             self.user = user

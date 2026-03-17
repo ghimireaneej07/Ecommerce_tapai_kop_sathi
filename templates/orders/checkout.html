@@ -1,50 +1,101 @@
 {% extends "base.html" %}
 {% block title %}Checkout | Tapai Ko Sathi{% endblock %}
 {% block content %}
-<section class="tks-section">
-    <h1>Checkout</h1>
-    <div class="tks-checkout-grid">
-        <div class="tks-checkout-main">
-            <form method="post">
-                {% csrf_token %}
-                {{ form.non_field_errors }}
-                <div class="tks-form-grid">
-                    {% for field in form %}
-                        <div class="tks-form-field">
-                            {{ field.label_tag }}
+<section class="tks-container" style="padding: 4rem 1.5rem;">
+    <h1 style="font-size: 2.5rem; color: var(--primary-dark); margin-bottom: 3rem;">Complete your Wellness Kit</h1>
+
+    <div class="row g-5">
+        <div class="col-lg-7">
+            <div class="tks-card" style="padding: 2.5rem;">
+                <h2 style="font-size: 1.5rem; margin-bottom: 2rem;">Shipping & Contact Information</h2>
+                <form method="post" id="checkout-form">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+
+                    <div class="row">
+                        {% for field in form %}
+                        <div
+                            class="col-md-{% if field.name == 'address_line1' or field.name == 'address_line2' %}12{% else %}6{% endif %} mb-4">
+                            <label
+                                style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main);">{{
+                                field.label }}</label>
                             {{ field }}
-                            {% if field.help_text %}
-                                <small>{{ field.help_text }}</small>
-                            {% endif %}
                             {% if field.errors %}
-                                <div class="tks-field-error">{{ field.errors|striptags }}</div>
+                            <div style="color: #C62828; font-size: 0.75rem; margin-top: 0.25rem; font-weight: 500;">{{
+                                field.errors|striptags }}</div>
                             {% endif %}
                         </div>
+                        {% endfor %}
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <button type="submit" class="tks-btn-primary" style="width: 100%; padding: 1.25rem;" id="checkout-submit">
+                            Confirm & Pay
+                        </button>
+                        <p class="tks-form-hint" style="margin-top: 0.75rem;">
+                            We will only charge you after you confirm the payment gateway.
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <aside class="col-lg-5">
+            <div class="tks-card" style="padding: 2.5rem; background: var(--bg-offset); position: sticky; top: 100px;">
+                <h2 style="font-size: 1.5rem; margin-bottom: 2rem;">Order Summary</h2>
+                {% if cart.items.all %}
+                <div style="margin-bottom: 2rem;">
+                    {% for item in cart.items.all %}
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-light);">
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <div
+                                style="width: 48px; height: 48px; background: white; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border-light);">
+                                {% if item.product.main_image %}
+                                <img src="{{ item.product.main_image.url }}"
+                                    style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <span style="font-size: 1.2rem;">🏺</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9375rem;">{{ item.product.name }}</div>
+                                <div style="font-size: 0.8125rem; color: var(--text-muted);">Qty: {{ item.quantity }}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="font-weight: 700;">NPR {{ item.subtotal }}</div>
+                    </div>
                     {% endfor %}
                 </div>
-                <button type="submit" class="tks-btn-primary">Place order</button>
-            </form>
-        </div>
-        <aside class="tks-checkout-summary">
-            <h2>Order summary</h2>
-            {% if cart.items.all %}
-                <ul class="tks-summary-list">
-                    {% for item in cart.items.all %}
-                        <li>
-                            <span>{{ item.product.name }} × {{ item.quantity }}</span>
-                            <span>NPR {{ item.subtotal }}</span>
-                        </li>
-                    {% endfor %}
-                </ul>
-                <p class="tks-summary-total">
-                    <span>Total</span>
-                    <span><strong>NPR {{ cart.total_price }}</strong></span>
-                </p>
-            {% else %}
-                <p>Your cart is empty.</p>
-            {% endif %}
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; font-size: 1.25rem; font-weight: 800; color: var(--primary-dark);">
+                    <span>Total Amount</span>
+                    <span>NPR {{ cart.total_price }}</span>
+                </div>
+
+                <div
+                    style="margin-top: 2rem; padding: 1rem; background: rgba(45, 90, 39, 0.05); border-radius: var(--radius-md); font-size: 0.875rem; color: var(--primary);">
+                    ✨ Ethically sourced from the Himalayas to your doorstep.
+                </div>
+                {% endif %}
+            </div>
         </aside>
     </div>
 </section>
 {% endblock %}
+{% block extra_js %}
+<script>
+    const checkoutForm = document.getElementById('checkout-form');
+    const checkoutSubmit = document.getElementById('checkout-submit');
 
+    if (checkoutForm && checkoutSubmit) {
+        checkoutForm.addEventListener('submit', () => {
+            checkoutSubmit.classList.add('tks-btn-loading');
+            checkoutSubmit.setAttribute('disabled', 'disabled');
+            checkoutSubmit.textContent = 'Processing...';
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="Herbs product placeholder">
+  <rect width="640" height="640" fill="#F9F8F6"/>
+  <circle cx="260" cy="280" r="80" fill="#4A7A43" opacity="0.25"/>
+  <circle cx="380" cy="300" r="90" fill="#2D5A27" opacity="0.2"/>
+  <path d="M220 360c80 60 160 60 240 0" fill="none" stroke="#2D5A27" stroke-width="10"/>
+  <text x="320" y="520" text-anchor="middle" font-family="Arial" font-size="28" fill="#2D5A27">Healing Herbs</text>
+</svg>

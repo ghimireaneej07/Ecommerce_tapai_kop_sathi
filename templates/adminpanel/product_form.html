@@ -2,23 +2,33 @@
 {% block title %}{% if product %}Edit{% else %}Add{% endif %} Product | Admin | Tapai Ko Sathi{% endblock %}
 {% block content %}
 <section class="tks-section">
-    <h1>{% if product %}Edit{% else %}Add{% endif %} product</h1>
-    <form method="post" enctype="multipart/form-data" class="tks-auth-card">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        <div class="tks-form-grid">
-            {% for field in form %}
-                <div class="tks-form-field">
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.errors %}
-                        <div class="tks-field-error">{{ field.errors|striptags }}</div>
-                    {% endif %}
-                </div>
-            {% endfor %}
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; margin-bottom: 2rem;">
+        <div>
+            <h1 style="margin-bottom: 0.5rem;">{% if product %}Edit{% else %}Add{% endif %} product</h1>
+            <p style="color: var(--text-muted);">Update product details and keep inventory accurate.</p>
         </div>
-        <button type="submit" class="tks-btn-primary">Save</button>
-    </form>
+        <a href="{% url 'admin_products' %}" class="tks-btn-outline" style="padding: 0.6rem 1.25rem;">Back to products</a>
+    </div>
+    <div class="tks-card" style="padding: 2.5rem;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="tks-form-grid">
+                {% for field in form %}
+                    <div class="tks-form-field">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="tks-field-error">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                <button type="submit" class="tks-btn-primary" style="padding: 0.75rem 1.75rem;">Save changes</button>
+            </div>
+        </form>
+    </div>
 </section>
 {% endblock %}
 

@@ -1,19 +1,42 @@
-import hmac
-import json
 import razorpay
-from hashlib import sha256
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 
 from tapai_ko_sathi.apps.orders.models import Order
 from tapai_ko_sathi.apps.payments.models import Payment
 from tapai_ko_sathi.apps.payments.utils import verify_esewa_transaction
+from tapai_ko_sathi.core.utils import api_response, api_error
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def payment_status_api(request, order_number):
+    """
+    API endpoint to check payment status for a specific order.
+    """
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+    try:
+        payment = order.payment
+        return api_response(data={
+            "order_number": order.order_number,
+            "status": order.status,
+            "payment_gateway": payment.gateway,
+            "payment_status": payment.status,
+            "transaction_id": payment.transaction_id
+        })
+    except Exception:
+        return api_error(message="Payment record not found", status_code=status.HTTP_404_NOT_FOUND)
+
+
+@login_required
 def initiate_payment(request: HttpRequest, order_number: str) -> HttpResponse:
     """
     Central hub to route payments to the correct gateway logic.
@@ -30,6 +53,7 @@ def initiate_payment(request: HttpRequest, order_number: str) -> HttpResponse:
     return redirect("order_success", order_number=order_number)
 
 
+@login_required
 def esewa_init(request: HttpRequest, order_number: str) -> HttpResponse:
     """
     Prepare auto-submitting form to redirect user to eSewa.
@@ -55,6 +79,7 @@ def esewa_init(request: HttpRequest, order_number: str) -> HttpResponse:
     return render(request, "payments/esewa_redirect.html", context)
 
 
+@login_required
 def razorpay_init(request: HttpRequest, order_number: str) -> HttpResponse:
     """
     Create a Razorpay Order and render checkout page.
@@ -201,174 +226,17 @@ def razorpay_callback(request: HttpRequest) -> HttpResponse:
 
 @csrf_exempt
 def esewa_webhook(request: HttpRequest) -> HttpResponse:
-    # ... (Keep existing webhook logic if needed, or simplify)
-    # Reducing complexity: We rely on redirect success/failure for this phase.
+    """
+    Handle POST callback from eSewa (if used).
+    """
     return JsonResponse({"status": "ok"})
 
 
 @csrf_exempt
 def razorpay_webhook(request: HttpRequest) -> HttpResponse:
-    # ... (Keep existing webhook logic if needed)
+    """
+    Handle POST callback from Razorpay (if used).
+    """
     return JsonResponse({"status": "ok"})
-    """
-    Prepare auto-submitting form to redirect user to eSewa.
-    """
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
-    payment = order.payment
-    success_url = settings.ESEWA_SUCCESS_URL
-    failure_url = settings.ESEWA_FAILURE_URL
 
-    context = {
-        "order": order,
-        "payment": payment,
-        "esewa_merchant_code": settings.ESEWA_MERCHANT_CODE,
-        "success_url": success_url,
-        "failure_url": failure_url,
-    }
-    return render(request, "payments/esewa_redirect.html", context)
-
-
-def esewa_success(request: HttpRequest) -> HttpResponse:
-    """
-    Handle successful redirect from eSewa and verify transaction server-side.
-    """
-    oid = request.GET.get("oid")  # our order_number (pid we sent)
-    amt = request.GET.get("amt")
-    ref_id = request.GET.get("refId")
-
-    if not all([oid, amt, ref_id]):
-        return redirect("order_failure", order_number=oid or "")
-
-    order = get_object_or_404(Order, order_number=oid)
-    payment = order.payment
-
-    is_valid = verify_esewa_transaction(order.order_number, float(amt), ref_id)
-
-    if is_valid:
-        payment.status = "success"
-        payment.transaction_id = ref_id
-        payment.save()
-        order.status = "paid"
-        order.save()
-        return redirect("order_success", order_number=order.order_number)
-
-    payment.status = "failed"
-    payment.transaction_id = ref_id
-    payment.save()
-    order.status = "failed"
-    order.save()
-    return redirect("order_failure", order_number=order.order_number)
-
-
-def esewa_failure(request: HttpRequest) -> HttpResponse:
-    """
-    Failure redirect from eSewa without successful verification.
-    """
-    oid = request.GET.get("oid", "")
-    if not oid:
-        return redirect("home")
-    order = get_object_or_404(Order, order_number=oid)
-    order.status = "failed"
-    order.save()
-    if hasattr(order, "payment"):
-        order.payment.status = "failed"
-        order.payment.save()
-    return redirect("order_failure", order_number=order.order_number)
-
-
-@csrf_exempt
-def esewa_webhook(request: HttpRequest) -> HttpResponse:
-    """
-    Optional webhook endpoint for asynchronous eSewa notifications.
-    Expects JSON with order_number, amount, and ref_id.
-    """
-    if request.method != "POST":
-        return JsonResponse({"detail": "Method not allowed"}, status=405)
-
-    try:
-        payload = json.loads(request.body.decode("utf-8"))
-    except json.JSONDecodeError:
-        return JsonResponse({"detail": "Invalid payload"}, status=400)
-
-    order_number = payload.get("order_number")
-    amount = payload.get("amount")
-    ref_id = payload.get("ref_id")
-    if not all([order_number, amount, ref_id]):
-        return JsonResponse({"detail": "Missing fields"}, status=400)
-
-    order = get_object_or_404(Order, order_number=order_number)
-    payment = order.payment
-
-    if verify_esewa_transaction(order_number, float(amount), ref_id):
-        payment.status = "success"
-        payment.transaction_id = ref_id
-        payment.save()
-        order.status = "paid"
-        order.save()
-        return JsonResponse({"status": "ok"})
-
-    payment.status = "failed"
-    payment.transaction_id = ref_id
-    payment.save()
-    order.status = "failed"
-    order.save()
-    return JsonResponse({"status": "failed"}, status=400)
-
-
-@csrf_exempt
-def razorpay_webhook(request: HttpRequest) -> HttpResponse:
-    """
-    Razorpay webhook verification.
-
-    This expects Razorpay to send JSON with an order or payment entity and a
-    signature header 'X-Razorpay-Signature'. We verify the signature using
-    HMAC-SHA256 and the configured key secret, then mark the matching order.
-    """
-    if request.method != "POST":
-        return JsonResponse({"detail": "Method not allowed"}, status=405)
-
-    key_secret = settings.RAZORPAY_KEY_SECRET
-    if not key_secret:
-        return JsonResponse({"detail": "Key secret not configured"}, status=400)
-
-    body = request.body
-    received_sig = request.headers.get("X-Razorpay-Signature", "")
-
-    expected_sig = hmac.new(
-        key_secret.encode("utf-8"), body, sha256
-    ).hexdigest()
-
-    if not hmac.compare_digest(received_sig, expected_sig):
-        return JsonResponse({"detail": "Invalid signature"}, status=400)
-
-    try:
-        payload = json.loads(body.decode("utf-8"))
-    except json.JSONDecodeError:
-        return JsonResponse({"detail": "Invalid JSON"}, status=400)
-
-    # Example: map Razorpay order_id to our order_number stored as transaction_id
-    entity = payload.get("payload", {}).get("payment", {}).get("entity", {})
-    razorpay_order_id = entity.get("order_id")
-    status = entity.get("status")
-
-    if not razorpay_order_id:
-        return JsonResponse({"detail": "Missing order id"}, status=400)
-
-    payment = get_object_or_404(
-        Payment, gateway="razorpay", transaction_id=razorpay_order_id
-    )
-    order = payment.order
-
-    if status == "captured":
-        payment.status = "success"
-        payment.save()
-        order.status = "paid"
-        order.save()
-        return JsonResponse({"status": "ok"})
-
-    payment.status = "failed"
-    payment.save()
-    order.status = "failed"
-    order.save()
-    return JsonResponse({"status": "failed"}, status=400)
 

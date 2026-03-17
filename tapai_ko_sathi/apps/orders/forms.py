@@ -24,3 +24,11 @@ class CheckoutForm(forms.Form):
         choices=PAYMENT_CHOICES, widget=forms.RadioSelect
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if isinstance(field.widget, forms.RadioSelect):
+                field.widget.attrs.update({"class": "form-check-input"})
+            else:
+                field.widget.attrs.update({"class": "form-control"})
+

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="Cosmetics product placeholder">
+  <rect width="640" height="640" fill="#F4F1EA"/>
+  <rect x="180" y="220" width="120" height="260" rx="20" fill="#2D5A27" opacity="0.18"/>
+  <rect x="340" y="260" width="120" height="220" rx="20" fill="#D4AF37" opacity="0.25"/>
+  <text x="320" y="520" text-anchor="middle" font-family="Arial" font-size="28" fill="#2D5A27">Cosmetics</text>
+</svg>

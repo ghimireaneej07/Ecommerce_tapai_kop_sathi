@@ -1,3 +1,4 @@
+from decimal import Decimal
 from rest_framework import permissions, status, views
 from rest_framework.response import Response
 from django.shortcuts import render
@@ -13,6 +14,22 @@ def _get_or_create_cart(request):
     return cp_get_cart(request)
 
 
+from tapai_ko_sathi.core.utils import api_response, api_error
+
+
+def _cart_payload(cart, item=None):
+    serializer = CartSerializer(cart)
+    payload = {
+        "cart": serializer.data,
+        "cart_item_count": cart.total_items,
+        "cart_total": str(cart.total_price),
+    }
+    if item:
+        payload["item_id"] = item.id
+        payload["item_subtotal"] = str(item.subtotal)
+    return payload
+
+
 class CartDetailAPI(views.APIView):
     """
     Returns the current user's/session's cart.
@@ -22,8 +39,7 @@ class CartDetailAPI(views.APIView):
 
     def get(self, request):
         cart = _get_or_create_cart(request)
-        serializer = CartSerializer(cart)
-        return Response(serializer.data)
+        return api_response(data=_cart_payload(cart))
 
 
 class CartAddItemAPI(views.APIView):
@@ -37,20 +53,60 @@ class CartAddItemAPI(views.APIView):
         cart = _get_or_create_cart(request)
         product = Product.objects.filter(id=product_id, is_active=True).first()
         if not product:
-            return Response(
-                {"detail": "Product not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return api_error(message="Product not found", status_code=status.HTTP_404_NOT_FOUND)
+
+        try:
+            quantity = int(request.data.get("quantity", 1))
+        except (TypeError, ValueError):
+            return api_error(message="Invalid quantity")
+
+        if quantity <= 0:
+            return api_error(message="Quantity must be at least 1")
+
+        if product.stock < quantity:
+            return api_error(message="Not enough stock available")
 
         item, created = CartItem.objects.get_or_create(
-            cart=cart, product=product, defaults={"quantity": 1}
+            cart=cart, product=product, defaults={"quantity": quantity}
         )
         if not created:
-            item.quantity += 1
-            item.save()
+            if item.quantity + quantity > product.stock:
+                return api_error(message="Not enough stock available")
+            item.quantity += quantity
+            item.save(update_fields=["quantity"])
 
-        serializer = CartSerializer(cart)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return api_response(data=_cart_payload(cart, item=item), message="Item added to cart")
+
+
+class CartUpdateItemAPI(views.APIView):
+    """
+    Update the quantity of an item in the cart.
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, item_id):
+        cart = _get_or_create_cart(request)
+        quantity = request.data.get("quantity")
+        
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                CartItem.objects.filter(cart=cart, id=item_id).delete()
+            else:
+                item = CartItem.objects.filter(cart=cart, id=item_id).select_related("product").first()
+                if item:
+                    if item.product.stock < quantity:
+                        return api_error(message="Not enough stock available")
+                    item.quantity = quantity
+                    item.save(update_fields=["quantity"])
+                else:
+                    return api_error(message="Item not found in cart", status_code=status.HTTP_404_NOT_FOUND)
+        except (TypeError, ValueError):
+            return api_error(message="Invalid quantity")
+
+        payload_item = CartItem.objects.filter(cart=cart, id=item_id).first()
+        return api_response(data=_cart_payload(cart, item=payload_item), message="Cart updated")
 
 
 class CartRemoveItemAPI(views.APIView):
@@ -63,8 +119,7 @@ class CartRemoveItemAPI(views.APIView):
     def post(self, request, item_id):
         cart = _get_or_create_cart(request)
         CartItem.objects.filter(cart=cart, id=item_id).delete()
-        serializer = CartSerializer(cart)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return api_response(data=_cart_payload(cart), message="Item removed from cart")
 
 
 def cart_page(request):

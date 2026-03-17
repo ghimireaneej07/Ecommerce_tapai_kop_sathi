@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path("init/<str:order_number>/", views.initiate_payment, name="initiate_payment"),
+    path("api/status/<str:order_number>/", views.payment_status_api, name="payment_status_api"),
     path(
         "esewa/init/<str:order_number>/",
         views.esewa_init,

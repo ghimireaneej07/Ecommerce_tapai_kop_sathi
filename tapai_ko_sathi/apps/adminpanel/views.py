@@ -1,10 +1,13 @@
+import logging
 from datetime import timedelta
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
+from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 from tapai_ko_sathi.apps.accounts.models import User
 from tapai_ko_sathi.apps.adminpanel.forms import (
@@ -28,39 +31,69 @@ def staff_required(view_func):
 
 @staff_required
 def dashboard(request):
-    total_orders = Order.objects.count()
-    total_revenue = (
-        Order.objects.filter(status__in=["paid", "completed"]).aggregate(
-            s=Sum("total_amount")
-        )["s"]
-        or 0
-    )
-    pending_orders = Order.objects.filter(status="pending").count()
-    recent_orders = Order.objects.order_by("-created_at")[:5]
+    try:
+        total_orders = Order.objects.count()
+        total_revenue = (
+            Order.objects.filter(status__in=["paid", "completed"]).aggregate(
+                s=Sum("total_amount")
+            )["s"]
+            or 0
+        )
+        pending_orders = Order.objects.filter(status="pending").count()
+        recent_orders = Order.objects.order_by("-created_at")[:5]
 
-    last_7_days = timezone.now() - timedelta(days=7)
-    orders_per_day = (
-        Order.objects.filter(created_at__gte=last_7_days)
-        .extra(select={"day": "DATE(created_at)"})
-        .values("day")
-        .annotate(count=Count("id"))
-        .order_by("day")
-    )
+        last_7_days = timezone.now() - timedelta(days=7)
+        orders_per_day = (
+            Order.objects.filter(created_at__gte=last_7_days)
+            .annotate(day=TruncDate("created_at"))
+            .values("day")
+            .annotate(count=Count("id"))
+            .order_by("day")
+        )
 
-    context = {
-        "total_orders": total_orders,
-        "total_revenue": total_revenue,
-        "pending_orders": pending_orders,
-        "recent_orders": recent_orders,
-        "orders_per_day": orders_per_day,
-    }
+        context = {
+            "total_orders": total_orders,
+            "total_revenue": total_revenue,
+            "pending_orders": pending_orders,
+            "recent_orders": recent_orders,
+            "orders_per_day": orders_per_day,
+        }
+    except Exception as e:
+        logger.error(f"Error loading admin dashboard: {str(e)}")
+        messages.error(request, "Failed to load dashboard statistics.")
+        context = {
+            "total_orders": 0, "total_revenue": 0, "pending_orders": 0,
+            "recent_orders": [], "orders_per_day": []
+        }
+        
     return render(request, "adminpanel/dashboard.html", context)
 
 
 @staff_required
 def product_list(request):
+    query = request.GET.get("q", "").strip()
+    category_id = request.GET.get("category", "").strip()
+
     products = Product.objects.all().select_related("category")
-    return render(request, "adminpanel/product_list.html", {"products": products})
+
+    if query:
+        products = products.filter(
+            Q(name__icontains=query)
+            | Q(short_description__icontains=query)
+            | Q(description__icontains=query)
+        )
+
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+    categories = Category.objects.all().order_by("name")
+    context = {
+        "products": products,
+        "categories": categories,
+        "query": query,
+        "active_category": category_id,
+    }
+    return render(request, "adminpanel/product_list.html", context)
 
 
 @staff_required
@@ -157,8 +190,28 @@ def category_delete(request, pk):
 
 @staff_required
 def order_list(request):
+    query = request.GET.get("q", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+
     orders = Order.objects.all().select_related("user")
-    return render(request, "adminpanel/order_list.html", {"orders": orders})
+
+    if query:
+        orders = orders.filter(
+            Q(order_number__icontains=query)
+            | Q(full_name__icontains=query)
+            | Q(user__email__icontains=query)
+        )
+
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+
+    context = {
+        "orders": orders,
+        "query": query,
+        "active_status": status_filter,
+        "status_choices": Order.STATUS_CHOICES,
+    }
+    return render(request, "adminpanel/order_list.html", context)
 
 
 @staff_required

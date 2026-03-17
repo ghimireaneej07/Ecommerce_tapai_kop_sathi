@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load static %}
+{% load product_tags %}
 {% block title %}Shop | Tapai Ko Sathi{% endblock %}
 
 {% block content %}
@@ -8,54 +10,100 @@
             <h1>Shop Tapai Ko Sathi</h1>
             <p>Gentle herbal blends crafted for daily balance and wellbeing. Discover nature's finest remedies.</p>
         </div>
-        
-        {% if categories %}
-            <div class="tks-filter-row" style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
-                <span style="font-weight:600; color:var(--text-muted);">Filter:</span>
-                <a href="{% url 'product_list' %}" class="{% if not request.GET.category %}active{% endif %}" style="text-decoration:none; color:var(--text-main);">All</a>
-                {% for category in categories %}
-                    <a href="?category={{ category.slug }}" class="{% if request.GET.category == category.slug %}active{% endif %}" style="text-decoration:none; color:var(--text-main);">{{ category.name }}</a>
-                {% endfor %}
-            </div>
+
+        {% if query %}
+        <p style="margin-top: 1rem; color: var(--text-muted);">Showing results for “{{ query }}”</p>
         {% endif %}
     </div>
 </section>
+<!-- Pagination controls -->
+{% if products.has_other_pages %}
+<nav aria-label="Page navigation" class="tks-container" style="margin-top:2rem;">
+    <ul class="pagination justify-content-center">
+        {% if products.has_previous %}
+        <li class="page-item">
+            <a class="page-link"
+                href="?page={{ products.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
 
-<section class="tks-container">
+        {% for num in products.paginator.page_range %}
+        {% if products.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > products.number|add:-3 and num < products.number|add:3 %} <li class="page-item"><a
+            class="page-link"
+            href="?page={{ num }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{
+            num }}</a></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if products.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ products.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Next</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<section class="tks-container" style="padding: 4rem 1.5rem;">
+    <div style="text-align: center; margin-bottom: 4rem;">
+        <h1 style="font-size: 2.5rem; color: var(--primary-dark); margin-bottom: 1rem;">Nature's Apothecary</h1>
+        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Discover our full range of ethically
+            sourced Himalayan herbs and wellness products.</p>
+    </div>
+
+    <!-- Filter Bar -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 3rem; overflow-x: auto; padding-bottom: 1rem;">
+        <a href="{% url 'product_list' %}{% if request.GET.q %}?q={{ request.GET.q }}{% endif %}" class="tks-btn-outline {% if not request.GET.category %}active{% endif %}"
+            style="white-space: nowrap;">All Collections</a>
+        {% for category in categories %}
+        <a href="?category={{ category.slug }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+            class="tks-btn-outline {% if request.GET.category == category.slug %}active{% endif %}"
+            style="white-space: nowrap;">{{ category.name }}</a>
+        {% endfor %}
+    </div>
+
     <div class="tks-product-grid">
         {% for product in products %}
-            <article class="tks-product-card">
-                <a href="{% url 'product_detail' slug=product.slug %}">
-                    <div class="tks-product-image-wrapper">
-                        {% if product.main_image %}
-                            <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
-                        {% else %}
-                            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#e2e8f0; color:#94a3b8;">
-                                No Image
-                            </div>
-                        {% endif %}
+        <article class="tks-product-card">
+            <a href="{% url 'product_detail' slug=product.slug %}">
+                <div style="overflow: hidden; position: relative;">
+                    {% if product.main_image %}
+                    <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                    {% with placeholder=product.category|placeholder_image %}
+                    <img src="{% static placeholder %}" alt="{{ product.name }}">
+                    {% endwith %}
+                    {% endif %}
+                </div>
+                <div class="tks-product-card-body">
+                    <span
+                        style="color: var(--text-light); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">{{ product.category|category_label }}</span>
+                    <h3 style="margin-top: 0.25rem;">{{ product.name }}</h3>
+                    <p>{{ product.short_description|truncatechars:80 }}</p>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+                        <span class="tks-price">NPR {{ product.price }}</span>
+                        <button class="tks-btn-primary tks-btn-add-cart" data-product-id="{{ product.id }}"
+                            onclick="event.stopPropagation();" style="padding: 0.5rem 1rem; font-size: 0.8125rem;">Add
+                            +</button>
                     </div>
-                </a>
-                
-                <div class="tks-product-content">
-                    <a href="{% url 'product_detail' slug=product.slug %}">
-                        <h3>{{ product.name }}</h3>
-                    </a>
-                    <p>{{ product.short_description|truncatechars:100 }}</p>
                 </div>
-
-                <div class="tks-product-footer">
-                    <span class="tks-price">NPR {{ product.price }}</span>
-                    <button class="tks-btn-add-cart"
-                            data-product-id="{{ product.id }}">
-                        Add to cart
-                    </button>
-                </div>
-            </article>
+            </a>
+        </article>
         {% empty %}
-            <div style="text-align:center; grid-column: 1/-1; padding: 3rem;">
-                <p>No products available at the moment.</p>
-            </div>
+        <div
+            style="grid-column: 1/-1; text-align: center; padding: 6rem; background: var(--bg-offset); border-radius: var(--radius-lg);">
+            <p style="color: var(--text-muted); font-size: 1.125rem;">No products found in this category.</p>
+            <a href="{% url 'product_list' %}"
+                style="color: var(--primary); margin-top: 1rem; display: inline-block;">Clear all filters</a>
+        </div>
         {% endfor %}
     </div>
 </section>
@@ -63,9 +111,9 @@
 
 {% block extra_js %}
 <script>
-  window.TKS_CART_ENDPOINTS = {
-    add: "{% url 'api_cart_add' 0 %}".replace("/0/", "/"),
-    detail: "{% url 'api_cart_detail' %}"
-  };
+    window.TKS_CART_ENDPOINTS = {
+        add: "{% url 'api_cart_add' 0 %}".replace("/0/", "/"),
+        detail: "{% url 'api_cart_detail' %}"
+    };
 </script>
 {% endblock %}

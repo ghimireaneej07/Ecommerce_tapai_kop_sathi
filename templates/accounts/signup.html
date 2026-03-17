@@ -1,27 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Signup | Tapai Ko Sathi{% endblock %}
+{% load static %}
+{% load form_tags %}
+
+{% block title %}Join Our Community | Tapai Ko Sathi{% endblock %}
+
 {% block content %}
-<section class="tks-auth-card">
-    <h1>Create your account</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        <div class="tks-form-grid">
-            {% for field in form %}
-                <div class="tks-form-field">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        <div class="tks-field-error">{{ field.errors|striptags }}</div>
-                    {% endif %}
-                </div>
-            {% endfor %}
+<section class="tks-container"
+    style="display: flex; align-items: center; justify-content: center; min-height: 80vh; padding: 4rem 0;">
+    <div class="tks-auth-card" style="max-width: 540px;">
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+            <span style="font-size: 2.5rem; display: block; margin-bottom: 1rem;">✨</span>
+            <h1 style="font-size: 1.75rem; color: var(--primary-dark);">Create Your Account</h1>
+            <p style="color: var(--text-muted); font-size: 0.875rem;">Begin your personalized wellness journey today.
+            </p>
         </div>
-        <button type="submit" class="tks-btn-primary">Create account</button>
-        <p class="tks-auth-alt">
-            Already have an account? <a href="{% url 'login' %}">Login</a>
-        </p>
-    </form>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div
+                style="background: #FFEBEE; color: #C62828; padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.875rem;">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+                {% for field in form %}
+                <div
+                    class="{% if field.name == 'first_name' or field.name == 'last_name' %}col-md-6{% else %}col-12{% endif %}">
+                    <div style="margin-bottom: 1.25rem;">
+                        {{ field.label_tag }}
+                        {{ field|add_class:'form-control' }}
+                        {% if field.errors %}<div style="color: #C62828; font-size: 0.75rem;">{{ field.errors.0 }}</div>
+                        {% endif %}
+                        {% if field.help_text %}<div style="color: var(--text-light); font-size: 0.7rem;">{{
+                            field.help_text|safe }}</div>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="tks-btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">
+                Start My Journey
+            </button>
+
+            <p style="text-align: center; margin-top: 2rem; font-size: 0.875rem; color: var(--text-muted);">
+                Already have an account? <a href="{% url 'login' %}"
+                    style="color: var(--primary); font-weight: 600;">Log in here</a>
+            </p>
+        </form>
+    </div>
 </section>
 {% endblock %}
-

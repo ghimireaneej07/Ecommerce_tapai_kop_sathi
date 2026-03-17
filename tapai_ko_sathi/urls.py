@@ -8,13 +8,17 @@ urlpatterns = [
     path("", core_views.home, name="home"),
     path("robots.txt", core_seo.robots_txt, name="robots_txt"),
     path("sitemap.xml", core_seo.sitemap_xml, name="sitemap_xml"),
-    # Disabling extra features for a clean homepage-only start as requested.
-    # path("accounts/", include("tapai_ko_sathi.apps.accounts.urls")),
-    # path("products/", include("tapai_ko_sathi.apps.products.urls")),
-    # path("cart/", include("tapai_ko_sathi.apps.cart.urls")),
-    # path("orders/", include("tapai_ko_sathi.apps.orders.urls")),
-    # path("payments/", include("tapai_ko_sathi.apps.payments.urls")),
-    # path("adminpanel/", include("tapai_ko_sathi.apps.adminpanel.urls")),
+    path("healthz/", core_views.health_check, name="health_check"),
+    path("accounts/", include("tapai_ko_sathi.apps.accounts.urls")),
+    path("api/accounts/", include("tapai_ko_sathi.apps.accounts.api_urls")),
+    path("products/", include("tapai_ko_sathi.apps.products.urls")),
+    path("cart/", include("tapai_ko_sathi.apps.cart.urls")),
+    path("api/cart/", include("tapai_ko_sathi.apps.cart.api_urls")),
+    path("orders/", include("tapai_ko_sathi.apps.orders.urls")),
+    path("api/orders/", include("tapai_ko_sathi.apps.orders.api_urls")),
+    path("payments/", include("tapai_ko_sathi.apps.payments.urls")),
+    path("api/payments/", include("tapai_ko_sathi.apps.payments.api_urls")),
+    path("adminpanel/", include("tapai_ko_sathi.apps.adminpanel.urls")),
 ]
 
 if settings.DEBUG:

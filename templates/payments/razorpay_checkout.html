@@ -3,24 +3,35 @@
 {% block title %}Pay with Razorpay/UPI | Tapai Ko Sathi{% endblock %}
 
 {% block content %}
-<div class="container tks-page-section" style="max-width: 600px; margin: 2rem auto; text-align: center;">
-    <h1>Confirm Payment</h1>
-    <p>Complete your payment using Razorpay (Cards, Netbanking, or UPI).</p>
-
-    <div class="tks-card" style="padding: 2rem; margin-top: 1rem;">
-        <h3>Order Total: NPR {{ order.total_amount }}</h3>
-        <p class="text-muted">Transaction ID: {{ razorpay_order_id }}</p>
-
-        <button id="rzp-button1" class="tks-btn-primary" style="margin-top: 1rem;">Pay Now</button>
+<section class="tks-section">
+    <div class="tks-status-card">
+        <div class="tks-status-icon">💳</div>
+        <h1>Confirm Payment</h1>
+        <p>Complete your payment using Razorpay (Cards, Netbanking, or UPI).</p>
+        <div class="tks-status-grid">
+            <div>
+                <span>Order Total</span>
+                <strong>NPR {{ order.total_amount }}</strong>
+            </div>
+            <div>
+                <span>Transaction</span>
+                <strong>{{ razorpay_order_id }}</strong>
+            </div>
+        </div>
+        <div class="tks-inline-alert">If the checkout does not open automatically, click the button below.</div>
+        <div class="tks-status-actions">
+            <button id="rzp-button1" class="tks-btn-primary">Pay Now</button>
+            <a href="{% url 'checkout_start' %}" class="tks-btn-outline">Back to checkout</a>
+        </div>
     </div>
-</div>
+</section>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-    var options = {
+    const options = {
         "key": "{{ razorpay_key_id }}",
         "amount": "{{ amount_paise }}",
-        "currency": "INR", // Razorpay standard
+        "currency": "INR",
         "name": "Tapai Ko Sathi",
         "description": "Payment for Order {{ order.order_number }}",
         "order_id": "{{ razorpay_order_id }}",
@@ -31,15 +42,21 @@
             "contact": "{{ order.phone }}"
         },
         "theme": {
-            "color": "#6D28D9"
+            "color": "#2D5A27"
         }
     };
-    var rzp1 = new Razorpay(options);
-    document.getElementById('rzp-button1').onclick = function (e) {
-        rzp1.open();
-        e.preventDefault();
+    const rzp1 = new Razorpay(options);
+    const payBtn = document.getElementById('rzp-button1');
+
+    if (payBtn) {
+        payBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            payBtn.classList.add('tks-btn-loading');
+            rzp1.open();
+            setTimeout(() => payBtn.classList.remove('tks-btn-loading'), 2000);
+        });
     }
-    // Automatically open on load for smoother UX
+
     window.onload = function () {
         rzp1.open();
     };

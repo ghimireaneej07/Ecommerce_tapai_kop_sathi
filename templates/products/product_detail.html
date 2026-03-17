@@ -1,24 +1,89 @@
 {% extends "base.html" %}
+{% load static %}
+{% load product_tags %}
+
 {% block title %}{{ product.name }} | Tapai Ko Sathi{% endblock %}
-{% block meta_description %}{{ product.short_description|default:product.name }}{% endblock %}
+
 {% block content %}
-<article class="tks-product-detail">
-    <div class="tks-product-detail-media">
+<div class="tks-container" style="padding: 4rem 1.5rem;">
+  <nav style="margin-bottom: 2rem; font-size: 0.875rem; color: var(--text-muted);">
+    <a href="{% url 'home' %}">Home</a> /
+    <a href="{% url 'product_list' %}">Shop</a> /
+    <span style="color: var(--text-main);">{{ product.name }}</span>
+  </nav>
+
+  <div class="row g-5">
+    <!-- Media Gallery -->
+    <div class="col-md-6">
+      <div class="tks-product-gallery">
         {% if product.main_image %}
-            <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+        <img id="tks-main-image" src="{{ product.main_image.url }}" alt="{{ product.name }}">
+        {% else %}
+        {% with placeholder=product.category|placeholder_image %}
+        <img id="tks-main-image" src="{% static placeholder %}" alt="{{ product.name }}">
+        {% endwith %}
         {% endif %}
+      </div>
+
+      {% if product.main_image or product.images.all %}
+      <div class="tks-gallery-thumbs">
+        {% if product.main_image %}
+        <button type="button" class="tks-gallery-thumb is-active" data-image-src="{{ product.main_image.url }}"
+          data-image-alt="{{ product.name }}" aria-label="Main image"></button>
+        {% endif %}
+        {% for pimg in product.images.all %}
+        <button type="button" class="tks-gallery-thumb" data-image-src="{{ pimg.image.url }}"
+          data-image-alt="{{ pimg.alt_text|default:product.name }}" aria-label="Gallery image"></button>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
-    <div class="tks-product-detail-info">
-        <h1>{{ product.name }}</h1>
-        <p class="tks-price">NPR {{ product.price }}</p>
-        <p>{{ product.description|linebreaks }}</p>
-        <button class="tks-btn-primary tks-btn-add-cart"
-                data-product-id="{{ product.id }}">
-            Add to cart
-        </button>
-        <p class="tks-note">Cash on Delivery available in major cities across Nepal.</p>
+
+    <!-- Product Info -->
+    <div class="col-md-6">
+      <div style="padding-top: 1rem;">
+        <span
+          style="color: var(--primary); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">{{ product.category|category_label }}</span>
+        <h1 style="font-size: 2.5rem; margin-top: 0.5rem; margin-bottom: 1rem; color: var(--primary-dark);">{{
+          product.name }}</h1>
+
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+          <span style="font-size: 1.75rem; font-weight: 700; color: var(--text-main);">NPR {{ product.price }}</span>
+          {% if product.stock > 0 %}
+          <span class="tks-stock-pill tks-stock-pill--in">In Stock</span>
+          {% else %}
+          <span class="tks-stock-pill tks-stock-pill--out">Out of Stock</span>
+          {% endif %}
+        </div>
+
+        <div style="margin-bottom: 2.5rem; color: var(--text-muted); line-height: 1.8;">
+          {{ product.description|linebreaks }}
+        </div>
+
+        <div class="tks-product-cta">
+          <button class="tks-btn-primary tks-btn-add-cart" data-product-id="{{ product.id }}"
+            style="padding: 1rem 3rem; flex: 1;" {% if product.stock <= 0 %}disabled{% endif %}>
+            {% if product.stock > 0 %}Add to Wellness Kit{% else %}Out of stock{% endif %}
+          </button>
+          <button
+            style="background: none; border: 1px solid var(--border); width: 50px; height: 50px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.72-8.72 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+              </path>
+            </svg>
+          </button>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-light); padding-top: 2rem;">
+          <p style="font-size: 0.875rem; margin-bottom: 0.5rem;"><strong>Expected Delivery:</strong> 2-3 Business Days
+          </p>
+          <p style="font-size: 0.875rem;"><strong>Payment:</strong> eSewa, Razorpay, or Cash on Delivery</p>
+        </div>
+      </div>
     </div>
-</article>
+  </div>
+</div>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org/",
@@ -46,6 +111,24 @@
     add: "{% url 'api_cart_add' 0 %}".replace("/0/", "/"),
     detail: "{% url 'api_cart_detail' %}"
   };
+
+  const mainImage = document.getElementById('tks-main-image');
+  const thumbs = document.querySelectorAll('.tks-gallery-thumb');
+
+  if (mainImage && thumbs.length) {
+    thumbs.forEach((thumb) => {
+      const src = thumb.dataset.imageSrc;
+      if (src) {
+        thumb.style.backgroundImage = `url('${src}')`;
+      }
+      thumb.addEventListener('click', () => {
+        if (!src) return;
+        mainImage.src = src;
+        mainImage.alt = thumb.dataset.imageAlt || mainImage.alt;
+        thumbs.forEach((btn) => btn.classList.remove('is-active'));
+        thumb.classList.add('is-active');
+      });
+    });
+  }
 </script>
 {% endblock %}
-

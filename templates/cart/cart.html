@@ -1,53 +1,117 @@
 {% extends "base.html" %}
-{% block title %}Your Cart | Tapai Ko Sathi{% endblock %}
+{% load static %}
+
+{% block title %}Your Wellness Kit | Tapai Ko Sathi{% endblock %}
+
 {% block content %}
-<section class="tks-section">
-    <h1>Your cart</h1>
+<div class="tks-container" style="padding: 4rem 1.5rem;">
+    <div style="margin-bottom: 3rem;">
+        <h1 style="font-size: 2rem; color: var(--primary-dark);">Your Wellness Kit</h1>
+        <p style="color: var(--text-muted);">Review your selection before starting your wellness journey.</p>
+    </div>
+
     <div id="tks-cart-root">
         {% if cart.items.all %}
-            <table class="tks-cart-table">
-                <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Subtotal</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for item in cart.items.all %}
-                    <tr data-item-id="{{ item.id }}">
-                        <td>{{ item.product.name }}</td>
-                        <td>{{ item.quantity }}</td>
-                        <td>NPR {{ item.product.price }}</td>
-                        <td>NPR {{ item.subtotal }}</td>
-                        <td>
-                            <button class="tks-link-btn tks-btn-remove-item"
-                                    data-item-id="{{ item.id }}">
-                                Remove
-                            </button>
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            <div class="tks-cart-summary">
-                <p>Total: <strong>NPR {{ cart.total_price }}</strong></p>
-                <a href="{% url 'checkout_start' %}" class="tks-btn-primary">Proceed to checkout</a>
+        <div class="row g-5">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                <div style="border-top: 1px solid var(--border-light);">
+                    {% for item in cart.items.all %}
+                    <div class="tks-cart-item" data-item-id="{{ item.id }}">
+                        <a href="{% url 'product_detail' slug=item.product.slug %}">
+                            {% if item.product.main_image %}
+                            <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}">
+                            {% else %}
+                            <div
+                                style="width: 100px; height: 100px; background: var(--secondary); border-radius: var(--radius-sm);">
+                            </div>
+                            {% endif %}
+                        </a>
+                        <div style="flex: 1;">
+                            <span
+                                style="color: var(--text-light); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">{{
+                                item.product.category.name|default:"Wellness" }}</span>
+                            <h3 style="margin: 0.25rem 0 0.5rem; font-size: 1.125rem;">{{ item.product.name }}</h3>
+                            <div
+                                style="display: flex; align-items: center; gap: 1.5rem; color: var(--text-muted); font-size: 0.875rem;">
+                                <div
+                                    style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-offset); border-radius: 20px; padding: 0.25rem 0.5rem;">
+                                    <button class="tks-qty-btn tks-qty-dec" data-item-id="{{ item.id }}"
+                                        style="background: none; border: none; font-size: 1.25rem; line-height: 1; padding: 0 0.5rem; cursor: pointer;">-</button>
+                                    <span class="tks-item-qty"
+                                        style="font-weight: 700; color: var(--text-main); min-width: 20px; text-align: center;">{{
+                                        item.quantity }}</span>
+                                    <button class="tks-qty-btn tks-qty-inc" data-item-id="{{ item.id }}"
+                                        style="background: none; border: none; font-size: 1rem; line-height: 1; padding: 0 0.5rem; cursor: pointer;">+</button>
+                                </div>
+                                <span><span class="tks-item-price">{{ item.product.price }}</span> / unit</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">NPR {{
+                                item.subtotal }}</div>
+                            <button class="tks-btn-remove-item" data-item-id="{{ item.id }}"
+                                style="background: none; border: none; color: #C62828; font-size: 0.75rem; cursor: pointer; text-decoration: underline;">Remove</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <a href="{% url 'product_list' %}"
+                        style="color: var(--primary); font-weight: 600; font-size: 0.875rem;">← Continue Shopping</a>
+                </div>
             </div>
+
+            <!-- Summary -->
+            <div class="col-lg-4">
+                <div class="tks-cart-summary">
+                    <h4 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">Kit
+                        Summary</h4>
+                    <div
+                        style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: var(--text-muted);">
+                        <span>Subtotal</span>
+                        <span class="tks-cart-subtotal">NPR {{ cart.total_price }}</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: var(--text-muted);">
+                        <span>Shipping</span>
+                        <span style="color: var(--primary); font-weight: 600;">Calculated at checkout</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--border); font-weight: 800; color: var(--text-main); font-size: 1.25rem;">
+                        <span>Total</span>
+                        <span class="tks-cart-total">NPR {{ cart.total_price }}</span>
+                    </div>
+
+                    <a href="{% url 'checkout_start' %}" class="tks-btn-primary"
+                        style="width: 100%; padding: 1rem; margin-top: 2rem; border-radius: var(--radius-md);">
+                        Proceed to Checkout
+                    </a>
+
+                    <div style="margin-top: 1.5rem; text-align: center; font-size: 0.75rem; color: var(--text-light);">
+                        Secure checkout powered by trusted Nepalese gateways.
+                    </div>
+                </div>
+            </div>
+        </div>
         {% else %}
-            <p>Your cart is empty. <a href="{% url 'product_list' %}">Start shopping</a>.</p>
+        <div style="text-align: center; padding: 6rem 0;">
+            <div style="font-size: 4rem; margin-bottom: 2rem;">🛒</div>
+            <h2 style="margin-bottom: 1rem; color: var(--primary-dark);">Your kit is empty</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2.5rem;">Time to start your wellness journey.</p>
+            <a href="{% url 'product_list' %}" class="tks-btn-primary">Browse Shop</a>
+        </div>
         {% endif %}
     </div>
-</section>
+</div>
 {% endblock %}
 {% block extra_js %}
 <script>
-  window.TKS_CART_ENDPOINTS = Object.assign(window.TKS_CART_ENDPOINTS || {}, {
-    remove: "{% url 'api_cart_remove' 0 %}".replace("/0/", "/"),
-    detail: "{% url 'api_cart_detail' %}"
-  });
+    window.TKS_CART_ENDPOINTS = Object.assign(window.TKS_CART_ENDPOINTS || {}, {
+        remove: "{% url 'api_cart_remove' 0 %}".replace("/0/", "/"),
+        update: "{% url 'api_cart_update' 0 %}".replace("/0/", "/"),
+        detail: "{% url 'api_cart_detail' %}"
+    });
 </script>
 {% endblock %}
-

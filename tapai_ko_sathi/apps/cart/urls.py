@@ -16,5 +16,10 @@ urlpatterns = [
         views.CartRemoveItemAPI.as_view(),
         name="api_cart_remove",
     ),
+    path(
+        "api/update/<int:item_id>/",
+        views.CartUpdateItemAPI.as_view(),
+        name="api_cart_update",
+    ),
 ]
 

@@ -1,38 +1,102 @@
 {% extends "base.html" %}
 {% block title %}Products | Admin | Tapai Ko Sathi{% endblock %}
 {% block content %}
-<section class="tks-section">
-    <h1>Products</h1>
-    <p><a href="{% url 'admin_product_create' %}" class="tks-btn-primary">Add product</a></p>
-    <table class="tks-cart-table">
-        <thead>
-        <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Status</th>
-            <th></th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for product in products %}
-            <tr>
-                <td>{{ product.name }}</td>
-                <td>{{ product.category.name }}</td>
-                <td>NPR {{ product.price }}</td>
-                <td>{{ product.stock }}</td>
-                <td>{{ product.is_active|yesno:"Active,Inactive" }}</td>
-                <td>
-                    <a href="{% url 'admin_product_edit' product.pk %}">Edit</a> |
-                    <a href="{% url 'admin_product_delete' product.pk %}">Delete</a>
-                </td>
-            </tr>
-        {% empty %}
-            <tr><td colspan="6">No products defined yet.</td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
+<section class="tks-container" style="padding: 4rem 1.5rem;">
+    <div style="margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="font-size: 2.5rem; color: var(--primary-dark); margin-bottom: 0.5rem;">Inventory Management</h1>
+            <p style="color: var(--text-muted);">A complete catalog of your Himalayan remedies and wellness products.
+            </p>
+        </div>
+        <a href="{% url 'admin_product_create' %}" class="tks-btn-primary" style="padding: 0.875rem 1.75rem;">+ Add New
+            Product</a>
+    </div>
+
+    <div class="tks-card" style="padding: 1.5rem; margin-bottom: 2rem;">
+        <form method="get" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+            <div style="flex: 1; min-width: 220px;">
+                <label class="form-label" for="product-search">Search</label>
+                <input type="text" id="product-search" name="q" value="{{ query }}" class="form-control"
+                    placeholder="Search by name or description">
+            </div>
+            <div style="min-width: 220px;">
+                <label class="form-label" for="product-category">Category</label>
+                <select id="product-category" name="category" class="form-control">
+                    <option value="">All categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if active_category == category.id|stringformat:"s" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-self: flex-end;">
+                <button type="submit" class="tks-btn-primary" style="padding: 0.7rem 1.5rem;">Apply</button>
+                <a href="{% url 'admin_products' %}" class="tks-btn-outline" style="padding: 0.7rem 1.5rem;">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="tks-card" style="padding: 0; overflow: hidden; border-radius: var(--radius-lg);">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead style="background: var(--bg-offset); border-bottom: 1px solid var(--border);">
+                <tr style="color: var(--text-main); font-weight: 700;">
+                    <th style="padding: 1.5rem 2rem;">Product Info</th>
+                    <th style="padding: 1.5rem 2rem;">Category</th>
+                    <th style="padding: 1.5rem 2rem;">Price</th>
+                    <th style="padding: 1.5rem 2rem;">Stock</th>
+                    <th style="padding: 1.5rem 2rem;">Status</th>
+                    <th style="padding: 1.5rem 2rem; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr style="border-bottom: 1px solid var(--border-light); transition: var(--transition);">
+                    <td style="padding: 1.5rem 2rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div
+                                style="width: 48px; height: 48px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); overflow: hidden;">
+                                {% if product.main_image %}
+                                <img src="{{ product.main_image.url }}"
+                                    style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <div
+                                    style="width: 100%; height: 100%; background: var(--bg-offset); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                    🏺</div>
+                                {% endif %}
+                            </div>
+                            <div style="font-weight: 700;">{{ product.name }}</div>
+                        </div>
+                    </td>
+                    <td style="padding: 1.5rem 2rem; color: var(--text-muted);">{{ product.category.name }}</td>
+                    <td style="padding: 1.5rem 2rem; font-weight: 700;">NPR {{ product.price }}</td>
+                    <td style="padding: 1.5rem 2rem;">
+                        <span
+                            style="font-weight: 600; color: {% if product.stock < 5 %}#C62828{% else %}inherit{% endif %};">
+                            {{ product.stock }} units
+                        </span>
+                    </td>
+                    <td style="padding: 1.5rem 2rem;">
+                        <span
+                            style="background: {% if product.is_active %}#E8F5E9{% else %}#FFEBEE{% endif %}; color: {% if product.is_active %}#2E7D32{% else %}#C62828{% endif %}; padding: 0.25rem 0.75rem; border-radius: 100px; font-size: 0.75rem; font-weight: 700;">
+                            {{ product.is_active|yesno:"Active,Inactive" }}
+                        </span>
+                    </td>
+                    <td style="padding: 1.5rem 2rem; text-align: right;">
+                        <a href="{% url 'admin_product_edit' product.pk %}"
+                            style="color: var(--primary); text-decoration: none; font-weight: 600; margin-right: 1.5rem;">Edit</a>
+                        <a href="{% url 'admin_product_delete' product.pk %}"
+                            style="color: #C62828; text-decoration: none; font-weight: 600;">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="padding: 4rem; text-align: center; color: var(--text-muted);">No products
+                        defined yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </section>
 {% endblock %}
-

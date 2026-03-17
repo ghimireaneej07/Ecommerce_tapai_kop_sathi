@@ -2,9 +2,15 @@
 {% block title %}Redirecting to eSewa | Tapai Ko Sathi{% endblock %}
 {% block content %}
 <section class="tks-section">
+  <div class="tks-status-card">
+    <div class="tks-status-icon">🔒</div>
     <h1>Redirecting to eSewa</h1>
     <p>Please wait while we securely redirect you to eSewa to complete your payment.</p>
-    <form id="esewa-form" action="https://uat.esewa.com.np/epay/main" method="POST">
+    <div class="tks-inline-alert">
+      If you are not redirected automatically, use the button below.
+    </div>
+  </div>
+  <form id="esewa-form" action="{{ esewa_url }}" method="POST" style="margin-top: 1.5rem;">
         {# Required eSewa fields. We use total_amount both as amt and tAmt for a single-product flow. #}
         <input type="hidden" name="amt" value="{{ order.total_amount }}">
         <input type="hidden" name="pdc" value="0">

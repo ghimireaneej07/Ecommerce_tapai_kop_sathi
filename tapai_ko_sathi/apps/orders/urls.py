@@ -15,5 +15,8 @@ urlpatterns = [
         name="order_failure",
     ),
     path("history/", views.order_history, name="order_history"),
+    # API endpoints
+    path("api/list/", views.OrderListAPI.as_view(), name="api_order_list"),
+    path("api/create/", views.OrderCreateAPI.as_view(), name="api_order_create"),
 ]
 

@@ -2,7 +2,13 @@
 {% block title %}Users | Admin | Tapai Ko Sathi{% endblock %}
 {% block content %}
 <section class="tks-section">
-    <h1>Users</h1>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; margin-bottom: 2rem;">
+        <div>
+            <h1 style="margin-bottom: 0.5rem;">Users</h1>
+            <p style="color: var(--text-muted);">Manage customer accounts and staff access levels.</p>
+        </div>
+        <a href="{% url 'admin_dashboard' %}" class="tks-btn-outline" style="padding: 0.75rem 1.5rem;">Back to dashboard</a>
+    </div>
     <table class="tks-cart-table">
         <thead>
         <tr>
@@ -22,7 +28,7 @@
                 <td>{{ user.is_email_verified|yesno:"Yes,No" }}</td>
                 <td>{{ user.is_staff|yesno:"Yes,No" }}</td>
                 <td>{{ user.is_active|yesno:"Yes,No" }}</td>
-                <td><a href="{% url 'admin_user_edit' user.pk %}">Edit</a></td>
+                <td><a href="{% url 'admin_user_edit' user.pk %}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Edit</a></td>
             </tr>
         {% empty %}
             <tr><td colspan="6">No users.</td></tr>

@@ -2,18 +2,29 @@
 {% block title %}Order placed | Tapai Ko Sathi{% endblock %}
 {% block content %}
 <section class="tks-section">
-    <h1>Thank you for your order</h1>
-    <p>Your order <strong>{{ order.order_number }}</strong> has been received.</p>
-    <p>Status: <strong>{{ order.get_status_display }}</strong></p>
-    <p>Total: <strong>NPR {{ order.total_amount }}</strong></p>
-    <p>
-        A confirmation has been created for {{ order.full_name }}<br>
-        Delivery address: {{ order.address_line1 }}, {{ order.city }}
-    </p>
-    <p>
-        <a href="{% url 'order_history' %}" class="tks-btn-primary">View my orders</a>
-        <a href="{% url 'product_list' %}" class="tks-btn-primary" style="margin-left:0.5rem;">Continue shopping</a>
-    </p>
+    <div class="tks-status-card">
+        <div class="tks-status-icon">✅</div>
+        <h1>Thank you for your order</h1>
+        <p>Your order <strong>{{ order.order_number }}</strong> has been received.</p>
+        <div class="tks-status-grid">
+            <div>
+                <span>Status</span>
+                <strong>{{ order.get_status_display }}</strong>
+            </div>
+            <div>
+                <span>Total</span>
+                <strong>NPR {{ order.total_amount }}</strong>
+            </div>
+            <div>
+                <span>Delivery</span>
+                <strong>{{ order.shipping_street_address }}, {{ order.shipping_city }}</strong>
+            </div>
+        </div>
+        <div class="tks-status-actions">
+            <a href="{% url 'order_history' %}" class="tks-btn-primary">View my orders</a>
+            <a href="{% url 'product_list' %}" class="tks-btn-outline">Continue shopping</a>
+        </div>
+    </div>
 </section>
 {% endblock %}
 

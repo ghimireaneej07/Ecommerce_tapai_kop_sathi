@@ -1,21 +1,104 @@
 {% extends "base.html" %}
-{% block title %}Tapai Ko Sathi | Herbal Wellness for Nepal{% endblock %}
+{% load static %}
+{% load product_tags %}
+
+{% block title %}Tapai Ko Sathi | Nature's Gentle Companion{% endblock %}
+
 {% block content %}
+<!-- Hero Section -->
 <section class="tks-hero">
-    <div class="tks-hero-text">
-        <h1>Tapai Ko Sathi</h1>
-        <p>Your gentle herbal companion for daily balance and wellness.</p>
-        <span class="tks-badge"
-            style="display:inline-block; padding: 0.5rem 1rem; background: var(--primary); color: white; border-radius: 20px; font-weight: 600; margin-top: 1rem;">Coming
-            Soon</span>
+    <div class="tks-container">
+        <span
+            style="color: var(--primary); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 1rem;">Welcome
+            to Wellness</span>
+        <h1>Rooted in Nature, <br><span style="color: var(--accent);">Perfected by Science</span></h1>
+        <p>Discover Nepal's finest herbal remedies, ethically sourced and crafted for your daily balance and vitality.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{% url 'product_list' %}" class="tks-btn-primary">Shop All Products</a>
+            <a href="#featured" class="tks-btn-outline">Our Story</a>
+        </div>
     </div>
 </section>
 
-<section class="tks-section" style="text-align: center;">
-    <h2>Experience Natural Balance</h2>
-    <p style="color:var(--text-muted); max-width:600px; margin: 1rem auto;">
-        We are currently refining our herbal collections to bring you the best
-        of nature's wisdom. Check back soon for our full product launch!
-    </p>
+<!-- Featured Products -->
+<section id="featured" class="tks-container" style="padding: 4rem 0;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem;">
+        <div style="text-align: left;">
+            <h2 style="font-size: 2rem; color: var(--primary-dark);">Featured Remedies</h2>
+            <p style="color: var(--text-muted);">Hand-picked selections for your health journey.</p>
+        </div>
+        <a href="{% url 'product_list' %}"
+            style="color: var(--primary); font-weight: 600; font-size: 0.875rem; border-bottom: 2px solid var(--accent);">View
+            All Shop →</a>
+    </div>
+
+    <div class="tks-product-grid">
+        {% for product in featured_products %}
+        <article class="tks-product-card">
+            <a href="{% url 'product_detail' slug=product.slug %}">
+                <div style="overflow: hidden; position: relative;">
+                    {% if product.main_image %}
+                    <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                    {% with placeholder=product.category|placeholder_image %}
+                    <img src="{% static placeholder %}" alt="{{ product.name }}">
+                    {% endwith %}
+                    {% endif %}
+                    <div
+                        style="position: absolute; top: 1rem; left: 1rem; background: var(--bg-main); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: var(--primary); box-shadow: var(--shadow-sm);">
+                        New</div>
+                </div>
+                <div class="tks-product-card-body">
+                    <span
+                        style="color: var(--text-light); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">{{ product.category|category_label }}</span>
+                    <h3 style="margin-top: 0.25rem;">{{ product.name }}</h3>
+                    <p>{{ product.short_description|truncatewords:10 }}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                        <span class="tks-price">NPR {{ product.price }}</span>
+                        <div style="color: var(--primary); font-size: 1.25rem;">+</div>
+                    </div>
+                </div>
+            </a>
+        </article>
+        {% empty %}
+        <div
+            style="grid-column: 1/-1; text-align: center; padding: 4rem; background: var(--bg-offset); border-radius: var(--radius-lg);">
+            <p style="color: var(--text-muted);">Our herbal vault is currently being replenished. Check back soon!</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Values Section -->
+<section style="background: var(--bg-offset); padding: 6rem 0; margin-bottom: 4rem;">
+    <div class="tks-container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🌿</div>
+                    <h4 style="margin-bottom: 0.75rem;">100% Organic</h4>
+                    <p style="color: var(--text-muted); font-size: 0.875rem;">Purely sourced from the Himalayan
+                        foothills without any chemical additives.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🤲</div>
+                    <h4 style="margin-bottom: 0.75rem;">Hand Crafted</h4>
+                    <p style="color: var(--text-muted); font-size: 0.875rem;">Small batches prepared with traditional
+                        wisdom and modern precision.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🌎</div>
+                    <h4 style="margin-bottom: 0.75rem;">Ethical Sourcing</h4>
+                    <p style="color: var(--text-muted); font-size: 0.875rem;">Supporting local farmers and ensuring
+                        sustainability at every step.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 {% endblock %}

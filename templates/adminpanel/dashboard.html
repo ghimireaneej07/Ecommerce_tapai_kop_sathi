@@ -1,48 +1,86 @@
 {% extends "base.html" %}
 {% block title %}Admin Dashboard | Tapai Ko Sathi{% endblock %}
 {% block content %}
-<section class="tks-section">
-    <h1>Store overview</h1>
-    <div class="tks-dashboard-grid">
-        <article class="tks-card">
-            <h2>Total orders</h2>
-            <p>{{ total_orders }}</p>
+<section class="tks-container" style="padding: 4rem 1.5rem;">
+    <div style="margin-bottom: 4rem; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h1 style="font-size: 2.5rem; color: var(--primary-dark); margin-bottom: 0.5rem;">Store Command Center</h1>
+            <p style="color: var(--text-muted);">Real-time overview of your Himalayan wellness empire.</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <a href="{% url 'admin_products' %}" class="tks-btn-outline" style="padding: 0.75rem 1.5rem;">Manage
+                Products</a>
+            <a href="{% url 'admin_orders' %}" class="tks-btn-primary" style="padding: 0.75rem 1.5rem;">View Orders</a>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
+        <article class="tks-card" style="padding: 2.5rem; text-align: center;">
+            <div
+                style="color: var(--text-muted); font-size: 0.875rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+                Total Revenue</div>
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">NPR {{ total_revenue }}</div>
         </article>
-        <article class="tks-card">
-            <h2>Total revenue</h2>
-            <p>NPR {{ total_revenue }}</p>
+        <article class="tks-card" style="padding: 2.5rem; text-align: center;">
+            <div
+                style="color: var(--text-muted); font-size: 0.875rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+                Active Orders</div>
+            <div style="font-size: 2.5rem; font-weight: 800; color: #EF6C00;">{{ total_orders }}</div>
         </article>
-        <article class="tks-card">
-            <h2>Pending orders</h2>
-            <p>{{ pending_orders }}</p>
+        <article class="tks-card" style="padding: 2.5rem; text-align: center;">
+            <div
+                style="color: var(--text-muted); font-size: 0.875rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+                Pending Remedies</div>
+            <div style="font-size: 2.5rem; font-weight: 800; color: #C62828;">{{ pending_orders }}</div>
         </article>
     </div>
 
-    <h2 style="margin-top:2rem;">Recent orders</h2>
-    <table class="tks-cart-table">
-        <thead>
-        <tr>
-            <th>#</th>
-            <th>Customer</th>
-            <th>Status</th>
-            <th>Total</th>
-            <th>Placed</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for order in recent_orders %}
-            <tr>
-                <td><a href="{% url 'admin_order_detail' order.pk %}">{{ order.order_number }}</a></td>
-                <td>{{ order.full_name }}</td>
-                <td>{{ order.get_status_display }}</td>
-                <td>NPR {{ order.total_amount }}</td>
-                <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
-            </tr>
-        {% empty %}
-            <tr><td colspan="5">No orders yet.</td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <div style="background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden;">
+        <div
+            style="padding: 1.5rem 2rem; background: var(--bg-offset); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.25rem; font-weight: 700;">Recent Wellness Orders</h2>
+            <a href="{% url 'admin_orders' %}"
+                style="font-size: 0.875rem; color: var(--primary); font-weight: 600; text-decoration: none;">View All
+                →</a>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr
+                    style="color: var(--text-muted); font-size: 0.875rem; border-bottom: 1px solid var(--border-light);">
+                    <th style="padding: 1.5rem 2rem;">Order #</th>
+                    <th style="padding: 1.5rem 2rem;">Customer</th>
+                    <th style="padding: 1.5rem 2rem;">Status</th>
+                    <th style="padding: 1.5rem 2rem;">Total</th>
+                    <th style="padding: 1.5rem 2rem;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr style="border-bottom: 1px solid var(--border-light); transition: var(--transition);">
+                    <td style="padding: 1.5rem 2rem;"><a href="{% url 'admin_order_detail' order.pk %}"
+                            style="color: var(--primary); font-weight: 700; text-decoration: none;">#{{
+                            order.order_number }}</a></td>
+                    <td style="padding: 1.5rem 2rem; font-weight: 600;">{{ order.full_name }}</td>
+                    <td style="padding: 1.5rem 2rem;">
+                        <span
+                            style="background: {% if order.status == 'completed' or order.status == 'paid' %}#E8F5E9{% elif order.status == 'pending' %}#FFF3E0{% else %}#FFEBEE{% endif %}; color: {% if order.status == 'completed' or order.status == 'paid' %}#2E7D32{% elif order.status == 'pending' %}#EF6C00{% else %}#C62828{% endif %}; padding: 0.25rem 0.75rem; border-radius: 100px; font-size: 0.75rem; font-weight: 700;">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 1.5rem 2rem; font-weight: 700;">NPR {{ order.total_amount }}</td>
+                    <td style="padding: 1.5rem 2rem; color: var(--text-muted);">{{ order.created_at|date:"M d, H:i" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding: 4rem; text-align: center; color: var(--text-muted);">No orders yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </section>
 {% endblock %}
-

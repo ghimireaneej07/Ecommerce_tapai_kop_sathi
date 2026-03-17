@@ -1,0 +1,21 @@
+{% load form_tags %}
+{% comment %}Reusable form field renderer for Bootstrap-friendly forms.{% endcomment %}
+{% for field in form %}
+  <div class="mb-3 tks-form-field">
+    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+    {% if field.field.widget.input_type == 'checkbox' %}
+      <div class="form-check">
+        {{ field|add_class:'form-check-input' }}
+        <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      </div>
+    {% else %}
+      {{ field|add_class:'form-control' }}
+    {% endif %}
+    {% if field.help_text %}
+      <div class="form-text">{{ field.help_text }}</div>
+    {% endif %}
+    {% if field.errors %}
+      <div class="invalid-feedback d-block">{{ field.errors|striptags }}</div>
+    {% endif %}
+  </div>
+{% endfor %}

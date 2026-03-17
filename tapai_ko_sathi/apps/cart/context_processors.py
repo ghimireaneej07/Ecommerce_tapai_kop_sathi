@@ -14,8 +14,18 @@ def _get_or_create_cart(request):
         request.session.create()
         session_key = request.session.session_key
 
+    if request.user.is_authenticated:
+        cart, created = Cart.objects.get_or_create(
+            user=request.user,
+            defaults={"session_key": session_key},
+        )
+        if not created and cart.session_key != session_key:
+            cart.session_key = session_key
+            cart.save(update_fields=["session_key"])
+        return cart
+
     cart, _ = Cart.objects.get_or_create(
-        user=request.user if request.user.is_authenticated else None,
+        user=None,
         session_key=session_key,
     )
     return cart
